@@ -81,9 +81,9 @@ class FillColl(object):
                 color = "k"
                 width = 0.5
             else:
-                color = None
+                color = self.colors[self.calls]
                 label = col.name
-                width = 1
+                width = 1.5
             ax.step(x=x, y=y, color=color, linewidth=width, where="mid", label=label)
         self.calls += 1
 
@@ -179,8 +179,13 @@ def plot_1d_many(df, prefix="", data="data", signal=None, dataset_col="dataset",
     else:
         in_df_signal = None
 
-    if in_df_data is None or in_df_sims is None:
+#    if in_df_data is None or in_df_sims is None:
+    for col in in_df_signal.unstack(dataset_col)["sumw"]:
+        if 'MadGraph' in col:
+            summary = "ratio_esh"
+            break
         summary = None
+
     if not summary:
         fig, main_ax = plt.subplots(1, 1)
     else:
@@ -221,6 +226,8 @@ def plot_1d_many(df, prefix="", data="data", signal=None, dataset_col="dataset",
             in_df_sims, "sum", dataset_col=dataset_col)
         plot_ratio(summed_data, summed_sims, x=x_axis,
                    y=y, yvar=yvar, ax=summary_ax)
+    elif summary == "ratio_esh":
+        plot_esh_ratio(in_df_signal, dataset_col, summary_ax, x_axis)
     else:
         raise RuntimeError("Unknown value for summary, '{}'".format(kind_data))
     return main_ax, summary_ax
@@ -269,3 +276,45 @@ def plot_ratio(data, sims, x, y, yvar, ax):
     ax.set_ylim([0., 2])
     ax.grid(True)
     ax.set_axisbelow(True)
+
+
+def plot_esh_ratio(df, dataset_col, ax, x_axis):
+    import pandas as pd
+    madgraph_sigs = []
+    pythia_sigs = []
+    
+    df = df.unstack(dataset_col)["sumw"]
+    for col in df.columns:
+        if col.endswith(' (Pythia)'):
+            pythia_sigs.append(col)
+        elif col.endswith(' (MadGraph)'):
+            madgraph_sigs.append(col)
+
+    assert len(madgraph_sigs) == len(pythia_sigs)
+
+    madgraph_sigs = list(reversed(madgraph_sigs))
+
+#    ratio_colormap = plt.cm.Greys
+#    colors = [ratio_colormap(i) for i in np.linspace(1.0, 0.4, len(madgraph_sigs))]
+
+    ratio_colormap = plt.cm.nipy_spectral
+    colors = [ratio_colormap(i) for i in np.linspace(.96, .2, len(df.columns))]
+
+    ratio_df = pd.DataFrame()
+    ratio_df["x"] = df.index
+    for i in range(len(madgraph_sigs)):
+        signal_model = madgraph_sigs[i].replace(" (MadGraph)", "")
+        for j in pythia_sigs:
+            if j == signal_model + " (Pythia)":
+                pythia_sig = j
+                break
+
+        ratio_df[signal_model] = df[madgraph_sigs[i]].values / df[pythia_sig].values
+        ratio_df.plot.scatter(x="x", y=signal_model, ax=ax, color=colors[2*i], label=signal_model + " ratio")
+
+    ax.set_ylim([0., 2.])
+    ax.grid(True)
+    ax.set_axisbelow(True)
+    ax.set_ylabel("MadGraph / Pythia", labelpad=21)
+    ax.set_xlabel(x_axis)
+    ax.legend(ncol=1, loc='upper right', fontsize='xx-small')
