@@ -124,6 +124,8 @@ def save_plots(infile, weight, plots, outdir, extension):
     kernel += "--" + ".".join(name)
     kernel += "--" + weight
     kernel = os.path.join(outdir, kernel)
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
     for properties, (main, ratio) in plots.items():
         insert = "-".join("%s_%s" % prop for prop in properties)
         path = kernel + "--" + insert
