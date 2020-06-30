@@ -310,7 +310,7 @@ def plot_esh_ratio(df, dataset_col, ax, x_axis):
                 break
 
         ratio_df[signal_model] = df[madgraph_sigs[i]].values / df[pythia_sig].values
-        ratio_df.plot.scatter(x="x", y=signal_model, ax=ax, color=colors[2*i], label=signal_model + " ratio")
+        ratio_df.plot.scatter(x="x", y=signal_model, ax=ax, marker="x", color=colors[2*i], label=signal_model + " ratio")
 
     ax.set_ylim([0., 2.])
     ax.grid(True)
