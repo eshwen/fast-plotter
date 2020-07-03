@@ -132,7 +132,8 @@ def save_plots(infile, weight, plots, outdir, extension):
         path += "." + extension
         logger.info("Saving plot: " + path)
         plot = main.get_figure()
-        plot.savefig(path, dpi=200, bbox_inches='tight')
+        matplotlib.pyplot.subplots_adjust(top=0.93, right=0.95, left=0.1)
+        plot.savefig(path, dpi=200)
         matplotlib.pyplot.close(plot)
 
 
