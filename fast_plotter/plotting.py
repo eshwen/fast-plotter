@@ -317,4 +317,4 @@ def plot_esh_ratio(df, dataset_col, ax, x_axis):
     ax.set_axisbelow(True)
     ax.set_ylabel("MadGraph / Pythia", labelpad=21)
     ax.set_xlabel(x_axis)
-    ax.legend(ncol=1, loc='upper right', fontsize='xx-small')
+    ax.legend(ncol=1, loc='upper right', fontsize='x-small')
