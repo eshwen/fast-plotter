@@ -143,7 +143,7 @@ class FillColl(object):
                 color = None
                 label = col.name
                 width = 2
-                style = "--"
+                style = "--" if "Total" not in col.name else "-"  # So the 'total background...' entries don't get mistaken for signal
             draw(ax, "step", x=x, ys=["y"], y=y, expected_xs=self.expected_xs,
                  color=color, linewidth=width, label=label, linestyle=style)
         self.calls += 1
@@ -406,9 +406,18 @@ def plot_1d_many(df, prefix="", data="data", signal=None, dataset_col="dataset",
             raise RuntimeError(err_msg)
         kwargs.setdefault("ratio_ylim", [0., 2.])
         kwargs.setdefault("ratio_ylabel", "Data / MC")
+        # HACKY WAY TO GET PRE-FIT AND POST-FIT RATIOS ON RATIO PLOT
+        prefit_sims = in_df_signal.loc[df.index.get_level_values(dataset_col) == 'Total background (pre-fit)']
+        prefit_sims = prefit_sims.reset_index(level=dataset_col, drop=True)
+        if len(prefit_sims) > 0:
+            plot_ratio(summed_data, prefit_sims, x=x_axis,
+                       y=y, yerr=yerr, ax=summary_ax, error=error,
+                       ylim=kwargs["ratio_ylim"], ylabel=kwargs["ratio_ylabel"], colour=dataset_colours['Total background (pre-fit)'], extra_prefit=True)
+
         plot_ratio(summed_data, summed_sims, x=x_axis,
                    y=y, yerr=yerr, ax=summary_ax, error=error,
                    ylim=kwargs["ratio_ylim"], ylabel=kwargs["ratio_ylabel"])
+
     else:
         raise RuntimeError(err_msg)
     return main_ax, summary_ax
@@ -444,7 +453,7 @@ def plot_1d(df, kind="line", yscale="lin"):
     return fig
 
 
-def plot_ratio(data, sims, x, y, yerr, ax, error="both", ylim=[0., 2], ylabel="Data / MC"):
+def plot_ratio(data, sims, x, y, yerr, ax, error="both", ylim=[0., 2], ylabel="Data / MC", colour="black", extra_prefit=False):
     # make sure both sides agree with the binning
     merged = data.join(sims, how="left", lsuffix="data", rsuffix="sims")
     data = merged.filter(like="data", axis="columns").fillna(0)
@@ -462,10 +471,11 @@ def plot_ratio(data, sims, x, y, yerr, ax, error="both", ylim=[0., 2], ylabel="D
         x_axis, ticks, central, lower, upper = values
         mask = (central != 0) & (lower != 0)
         ax.errorbar(x=x_axis[mask], y=central[mask], yerr=(lower[mask], upper[mask]),
-                    fmt="o", markersize=4, color="k")
-        draw(ax, "errorbar", x_axis[mask], ys=["y", "yerr"],
-             y=central[mask], yerr=(lower[mask], upper[mask]),
-             fmt="o", markersize=4, color="k")
+                    fmt="o", markersize=4, color=colour)
+        if not extra_prefit:
+            draw(ax, "errorbar", x_axis[mask], ys=["y", "yerr"],
+                 y=central[mask], yerr=(lower[mask], upper[mask]),
+                 fmt="o", markersize=4, color=colour)
 
     elif error == "both":
         ratio = d / s
@@ -474,16 +484,22 @@ def plot_ratio(data, sims, x, y, yerr, ax, error="both", ylim=[0., 2], ylabel="D
 
         draw(ax, "errorbar", x_axis, ys=["y", "yerr"],
              y=ratio, yerr=rel_d_err,
-             fmt="o", markersize=4, color="k")
-        draw(ax, "fill_between", x_axis, ys=["y1", "y2"],
-             y2=1 + rel_s_err, y1=1 - rel_s_err, fill_val=1,
-             color="gray", alpha=0.7)
+             fmt="o", markersize=4, color=colour)
+        if not extra_prefit:
+            draw(ax, "fill_between", x_axis, ys=["y1", "y2"],
+                 y2=1 + rel_s_err, y1=1 - rel_s_err, fill_val=1,
+                 color="gray", alpha=0.7)
 
     ax.set_ylim(ylim)
     ax.grid(True)
     ax.set_axisbelow(True)
     ax.set_xlabel(x)
     ax.set_ylabel(ylabel)
+    # Add legend with dummy entries for pre-fit and post-fit together
+    if extra_prefit:
+        prefit_entry = ax.errorbar(x=[], y=[], yerr=([], []), fmt="o", markersize=4, color=colour, label="Pre-fit")
+        postfit_entry = ax.errorbar(x=[], y=[], yerr=([], []), fmt="o", markersize=4, color="black", label="Post-fit")
+        ax.legend(handles=[prefit_entry, postfit_entry], loc="upper right", fontsize="x-small", ncol=2)  # LEGEND LOCATION AND FONT SIZE HARDCODED
 
 
 def convert_intervals(vals):
