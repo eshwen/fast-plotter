@@ -166,7 +166,7 @@ def actually_plot(df, x_axis, y, yerr, kind, label, ax, dataset_col="dataset",
     expected_xs = df.index.unique(x_axis).values
     if kind == "scatter":
         draw(ax, "errorbar", x=df.reset_index()[x_axis], ys=["y", "yerr"], y=df[y], yerr=df[yerr],
-             color="k", ms=3.5, fmt="o", label=label, expected_xs=expected_xs, add_ends=False)
+             color="k", ms=3.5, fmt="o", label=label, expected_xs=expected_xs, add_ends=False, zorder=100.)
         return
     if dataset_order is not None:
         input_datasets = df.index.unique(dataset_col)
