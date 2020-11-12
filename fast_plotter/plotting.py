@@ -482,9 +482,15 @@ def plot_ratio(data, sims, x, y, yerr, ax, error="both", ylim=[0., 2], ylabel="D
         rel_d_err = (d_err / s)
         rel_s_err = (s_err / s)
 
+        # Hacky way to ensure post-fit marker and error bar are drawn on top of pre-fit
+        if extra_prefit:
+            zorder = 5.
+        else:
+            zorder = 6.
+
         draw(ax, "errorbar", x_axis, ys=["y", "yerr"],
              y=ratio, yerr=rel_d_err,
-             fmt="o", markersize=4, color=colour)
+             fmt="o", markersize=4, color=colour, zorder=zorder)
         if not extra_prefit:
             draw(ax, "fill_between", x_axis, ys=["y1", "y2"],
                  y2=1 + rel_s_err, y1=1 - rel_s_err, fill_val=1,
