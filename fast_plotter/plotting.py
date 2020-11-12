@@ -144,8 +144,17 @@ class FillColl(object):
                 label = col.name
                 width = 2
                 style = "--" if "Total" not in col.name else "-"  # So the 'total background...' entries don't get mistaken for signal
-            draw(ax, "step", x=x, ys=["y"], y=y, expected_xs=self.expected_xs,
-                 color=color, linewidth=width, label=label, linestyle=style)
+            if "Total" not in col.name:
+                draw(ax, "step", x=x, ys=["y"], y=y, expected_xs=self.expected_xs,
+                     color=color, linewidth=width, label=label, linestyle=style)
+            # Hacky way to ensure post-fit line is always drawn on top of pre-fit
+            else:
+                if "pre-fit" in col.name:
+                    z_order = 50.
+                else:
+                    z_order = 51.
+                draw(ax, "step", x=x, ys=["y"], y=y, expected_xs=self.expected_xs,
+                     color=color, linewidth=width, label=label, linestyle=style, zorder=z_order)
         self.calls += 1
 
 
