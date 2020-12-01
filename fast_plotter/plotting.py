@@ -514,7 +514,8 @@ def plot_ratio(data, sims, x, y, yerr, ax, error="both", ylim=[0., 2], ylabel="D
     if extra_prefit:
         prefit_entry = ax.errorbar(x=[], y=[], yerr=([], []), fmt="o", markersize=4, color=colour, label="Pre-fit")
         postfit_entry = ax.errorbar(x=[], y=[], yerr=([], []), fmt="o", markersize=4, color="black", label="Post-fit")
-        ax.legend(handles=[prefit_entry, postfit_entry], loc="upper right", fontsize="x-small", ncol=2)  # LEGEND LOCATION AND FONT SIZE HARDCODED
+        leg = ax.legend(handles=[prefit_entry, postfit_entry], loc="upper right", fontsize="x-small", ncol=2)  # LEGEND LOCATION AND FONT SIZE HARDCODED
+        leg.set_zorder(10.)
 
 
 def convert_intervals(vals):
